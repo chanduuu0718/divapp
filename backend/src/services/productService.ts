@@ -111,26 +111,69 @@ export async function extractProduct(sourceUrl: string): Promise<Product> {
   $('meta[property="og:image"]').each((_i, el) => addImage($(el).attr("content")));
   $('meta[name="twitter:image"]').each((_i, el) => addImage($(el).attr("content")));
 
-  // Amazon often stores gallery images in embedded JSON rather than OG metadata.
-  // Look for direct image URLs in the page source and decode common escaped slashes.
-  const amazonImageUrlPattern = /(https?:\/\/[^"'\s<>]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"'\s<>]*)?)/gi;
+  // Amazon pages contain many unrelated assets (Prime, Fresh, logos,
+  // recommendations, badges, etc.). Prefer the actual product image block.
+  const amazonProductSelectors = [
+    "#landingImage",
+    "#imgTagWrapperId img",
+    "#altImages img",
+    "#imageBlock_feature_div img",
+    "#imageBlock img",
+  ];
 
-  for (const match of html.matchAll(amazonImageUrlPattern)) {
-    const raw = match[1]
-      .replace(/\\\//g, "/")
-      .replace(/\\/g, "/");
-    addImage(raw);
+  for (const selector of amazonProductSelectors) {
+    $(selector).each((_i, el) => {
+      const node = $(el);
+      addImage(
+        node.attr("data-old-hires") ||
+        node.attr("data-src") ||
+        node.attr("src")
+      );
+    });
   }
 
-  // Some Amazon pages expose a JSON object containing image URLs.
-  const dynamicMatches = html.matchAll(/data-a-dynamic-image="([^"]+)"/gi);
-  for (const match of dynamicMatches) {
+  // The main gallery commonly stores a JSON map in data-a-dynamic-image.
+  // Only read it from the product image block; page-wide scanning pulls in
+  // unrelated Amazon brand/recommendation images.
+  $("#landingImage, #imgTagWrapperId img").each((_i, el) => {
+    const raw = $(el).attr("data-a-dynamic-image");
+    if (!raw) return;
+
     try {
-      const decoded = match[1].replace(/&quot;/g, '"').replace(/\\\//g, "/");
+      const decoded = raw
+        .replace(/&quot;/g, '"')
+        .replace(/&#34;/g, '"')
+        .replace(/\\\//g, "/");
       const imageMap = JSON.parse(decoded);
       Object.keys(imageMap).forEach(addImage);
     } catch {
       // Continue with the other extraction methods.
+    }
+  });
+
+  // Some Amazon versions expose the product gallery through colorImages.
+  const colorImagesMatch = html.match(
+    /"colorImages"\\s*:\\s*({.*?})\\s*,\\s*"(?:heroImage|initialImage|asin)/s
+  );
+
+  if (colorImagesMatch) {
+    try {
+      const decoded = colorImagesMatch[1]
+        .replace(/\\\//g, "/")
+        .replace(/&quot;/g, '"');
+      const parsed = JSON.parse(decoded);
+
+      for (const value of Object.values(parsed)) {
+        if (!Array.isArray(value)) continue;
+
+        for (const entry of value as any[]) {
+          if (entry?.hiRes) addImage(entry.hiRes);
+          else if (entry?.large) addImage(entry.large);
+          else if (entry?.thumb) addImage(entry.thumb);
+        }
+      }
+    } catch {
+      // Continue with the DOM-based extraction.
     }
   }
 
