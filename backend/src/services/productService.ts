@@ -111,6 +111,42 @@ export async function extractProduct(sourceUrl: string): Promise<Product> {
   $('meta[property="og:image"]').each((_i, el) => addImage($(el).attr("content")));
   $('meta[name="twitter:image"]').each((_i, el) => addImage($(el).attr("content")));
 
+  // Amazon often stores gallery images in embedded JSON rather than OG metadata.
+  // Parse the common dynamic-image and image-gallery structures without depending on affiliate links.
+  const amazonImagePatterns = [
+    /data-a-dynamic-image="([^"]+)"/gi,
+    /"hiRes":"(https?:\\/\\/[^"]+)"/gi,
+    /"large":"(https?:\\/\\/[^"]+)"/gi,
+    /"mainUrl":"(https?:\\/\\/[^"]+)"/gi,
+  ];
+
+  for (const pattern of amazonImagePatterns) {
+    for (const match of html.matchAll(pattern)) {
+      const raw = match[1]
+        .replace(/&quot;/g, '"')
+        .replace(/\\\\\\//g, "/")
+        .replace(/\\\//g, "/");
+      try {
+        const decoded = JSON.parse('"' + raw.replace(/"/g, '\\"') + '"');
+        addImage(decoded);
+      } catch {
+        addImage(raw);
+      }
+    }
+  }
+
+  // Some Amazon pages expose a JSON object containing image URLs.
+  const dynamicMatches = html.matchAll(/data-a-dynamic-image="([^"]+)"/gi);
+  for (const match of dynamicMatches) {
+    try {
+      const decoded = match[1].replace(/&quot;/g, '"').replace(/\\\//g, "/");
+      const imageMap = JSON.parse(decoded);
+      Object.keys(imageMap).forEach(addImage);
+    } catch {
+      // Continue with the other extraction methods.
+    }
+  }
+
   const images = Array.from(new Set(imageCandidates
     .map((image) => absoluteUrl(image, response.url || sourceUrl))
     .filter(Boolean)))
