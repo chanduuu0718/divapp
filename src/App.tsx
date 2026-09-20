@@ -41,7 +41,7 @@ export default function App() {
   const [design, setDesign] = useState<Design | null>(null);
   const [error, setError] = useState("");
 
-  const canAnalyze = useMemo(() => /^https?:\\/\\//i.test(url.trim()), [url]);
+  const canAnalyze = useMemo(() => /^https?:\/\//i.test(url.trim()), [url]);
 
   async function analyzeLink() {
     if (!canAnalyze) return;
