@@ -44,6 +44,7 @@ h1 { margin: 18px auto 18px; max-width: 820px; font-size: clamp(42px, 7vw, 78px)
 .primary-button:disabled, .secondary-button:disabled { opacity: .45; cursor: not-allowed; }
 
 .trust-row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 15px; color: #85858d; font-size: 12px; }
+.error-box { max-width: 780px; margin: 16px auto 0; padding: 13px 15px; border: 1px solid #f0caca; background: #fff5f5; color: #a33a3a; border-radius: 12px; font-size: 13px; line-height: 1.5; }
 
 .workspace, .poster-section { max-width: 1160px; margin: 90px auto 0; padding: 0 28px; }
 .section-heading { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 24px; }
@@ -68,6 +69,9 @@ h1 { margin: 18px auto 18px; max-width: 820px; font-size: clamp(42px, 7vw, 78px)
 .ai-panel strong { font-size: 14px; }
 .ai-panel p { margin: 6px 0 0; color: #767681; max-width: 620px; line-height: 1.5; font-size: 13px; }
 .secondary-button { background: #6b5cff; color: white; white-space: nowrap; }
+.download-button, .regenerate-button { border: 1px solid #dedde5; background: white; color: #222229; border-radius: 12px; padding: 11px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; }
+.download-button { background: #17171b; color: white; border-color: #17171b; }
+.regenerate-button { margin-top: 16px; width: 100%; }
 
 .poster-result { display: grid; grid-template-columns: minmax(320px, 560px) 1fr; gap: 30px; align-items: start; }
 .poster-canvas { position: relative; overflow: hidden; min-height: 640px; border-radius: 30px; background: #111115; color: white; padding: 38px; box-shadow: 0 30px 80px rgba(10,10,15,.18); }
