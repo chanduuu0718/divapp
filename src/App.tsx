@@ -118,7 +118,6 @@ export default function App() {
 
     ctx.fillStyle = design.text || "#fff";
     ctx.font = "800 26px Inter, Arial, sans-serif";
-    ctx.letterSpacing = "5px";
     ctx.fillText((design.badge || "FEATURED").toUpperCase().slice(0, 18), 76, 100);
 
     ctx.font = "800 72px Inter, Arial, sans-serif";
