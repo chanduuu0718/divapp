@@ -56,8 +56,18 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not read this product.");
+      const raw = await response.text();
+      let data: any = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new Error(
+          response.ok
+            ? "The server returned an invalid response."
+            : `Product service error (HTTP ${response.status}). Check the backend terminal for details.`
+        );
+      }
+      if (!response.ok) throw new Error(data.error || `Could not read this product (HTTP ${response.status}).`);
       setProduct(data);
       setSelected(data.images.slice(0, Math.min(2, data.images.length)).map((_: ProductImage, i: number) => i));
     } catch (err) {
@@ -85,8 +95,18 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product, style }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Poster design failed.");
+      const raw = await response.text();
+      let data: any = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new Error(
+          response.ok
+            ? "The AI service returned an invalid response."
+            : `AI service error (HTTP ${response.status}). Check the backend terminal for details.`
+        );
+      }
+      if (!response.ok) throw new Error(data.error || `Poster design failed (HTTP ${response.status}).`);
       setDesign(data);
       setGenerated(true);
     } catch (err) {
